@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drishti — Market Intelligence OS</title>
+<style>
+:root {
+  --ink: #0F0E0D;
+  --ink2: #3A3836;
+  --ink3: #8A8480;
+  --ink4: #C4BDB8;
+  --paper: #F7F5F2;
+  --paper2: #EDE9E4;
+  --paper3: #E2DDD7;
+  --white: #FFFFFF;
+  --border: #DDD9D4;
+  --border2: #CECAC4;
+  --gold: #C9A84C;
+  --gold-lt: #F3ECD8;
+  --gold-dk: #8B6E2A;
+  --red: #C62828;
+  --red-lt: #FEECEC;
+  --green: #2E7D32;
+  --green-lt: #EAF3DE;
+  --blue: #1A56A0;
+  --blue-lt: #DBEAFE;
+  --purple: #5B4FCF;
+  --purple-lt: #EEEDFE;
+  --r: 8px;
+  --rl: 12px;
+  --font: 'Inter', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body { font-family: var(--font); background: var(--paper); color: var(--ink); min-height: 100vh; }
+
+/* ── HEADER ── */
+.hdr {
+  background: var(--ink);
+  padding: 0 24px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.hdr-logo {
+  font-family: Georgia, serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: .5px;
+  margin-right: 32px;
+  white-space: nowrap;
+}
+.hdr-logo span { color: var(--gold); }
+.hdr-nav { display: flex; height: 100%; flex: 1; }
+.hdr-tab {
+  padding: 0 16px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,.4);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all .15s;
+  white-space: nowrap;
+  letter-spacing: .01em;
+  border: none;
+  background: none;
+  font-family: var(--font);
+}
+.hdr-tab:hover { color: rgba(255,255,255,.75); }
+.hdr-tab.active { color: #fff; border-bottom: 2px solid var(--gold); }
+.hdr-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.region-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 20px;
+  padding: 4px 10px 4px 8px;
+  font-size: 11px;
+  color: rgba(255,255,255,.7);
+  cursor: pointer;
+  transition: all .15s;
+}
+.region-pill:hover { background: rgba(255,255,255,.14); }
+.region-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+.last-updated { font-size: 10px; color: rgba(255,255,255,.3); }
+
+/* ── TICKER ── */
+.ticker-bar {
+  background: #1A1917;
+  border-top: 1px solid rgba(255,255,255,.06);
+  height: 26px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.ticker-label {
+  flex-shrink: 0;
+  padding: 0 12px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--gold);
+  border-right: 1px solid rgba(255,255,255,.08);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+.ticker-scroll { flex: 1; overflow: hidden; }
+.ticker-track {
+  display: flex;
+  animation: ticker 80s linear infinite;
+  white-space: nowrap;
+}
+.ticker-track:hover { animation-play-state: paused; }
+@keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  border-right: 1px solid rgba(255,255,255,.05);
+  height: 26px;
+  font-size: 11px;
+  color: rgba(255,255,255,.5);
+  cursor: default;
+}
+.t-tag {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  flex-shrink: 0;
+}
+.t-hot { background: var(--red); color: #fff; }
+.t-rising { background: var(--green); color: #fff; }
+.t-watch { background: var(--gold); color: var(--ink); }
+.t-global { background: var(--purple); color: #fff; }
+
+/* ── LAYOUT ── */
+.page { display: none; padding: 24px; max-width: 1400px; margin: 0 auto; }
+.page.active { display: block; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  padding: 18px;
+}
+.card + .card { margin-top: 14px; }
+.card-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.card-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--ink2);
+}
+.card-sub { font-size: 11px; color: var(--ink3); margin-top: 2px; }
+
+/* ── GRIDS ── */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+.g-main { display: grid; grid-template-columns: 1fr 380px; gap: 16px; }
+.g-main-wide { display: grid; grid-template-columns: 1fr 340px; gap: 16px; }
+
+/* ── TRIGGER MORNING CARD ── */
+.trigger-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow .15s, border-color .15s;
+}
+.trigger-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.08); border-color: var(--border2); }
+.trigger-top { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.trigger-urgency {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.u-critical { background: var(--red-lt); color: var(--red); }
+.u-high { background: var(--gold-lt); color: var(--gold-dk); }
+.u-watch { background: var(--blue-lt); color: var(--blue); }
+.trigger-headline { font-size: 14px; font-weight: 600; line-height: 1.4; margin-bottom: 4px; }
+.trigger-region { font-size: 11px; color: var(--ink3); display: flex; align-items: center; gap: 5px; }
+.trigger-body { padding: 12px 16px; }
+.trigger-stat-row { display: flex; gap: 16px; margin-bottom: 10px; }
+.tstat { }
+.tstat-val { font-size: 18px; font-weight: 700; }
+.tstat-lbl { font-size: 10px; color: var(--ink3); margin-top: 1px; }
+.trigger-insight { font-size: 11px; color: var(--ink2); line-height: 1.6; padding: 8px 10px; background: var(--paper); border-radius: var(--r); margin-bottom: 10px; }
+.trigger-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gold-dk);
+  cursor: pointer;
+  border: 1px solid var(--gold);
+  padding: 6px 12px;
+  border-radius: var(--r);
+  background: var(--gold-lt);
+  transition: all .15s;
+  font-family: var(--font);
+}
+.trigger-cta:hover { background: var(--gold); color: var(--ink); }
+
+/* ── STAT PILLS ── */
+.stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.up { background: var(--green-lt); color: var(--green); }
+.down { background: var(--red-lt); color: var(--red); }
+.flat { background: var(--paper2); color: var(--ink3); }
+
+/* ── TREND ITEMS ── */
+.trend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.trend-item:last-child { border-bottom: none; }
+.trend-rank {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+  background: var(--paper2);
+  color: var(--ink3);
+}
+.trend-rank.hot { background: var(--red-lt); color: var(--red); }
+.trend-sparkbar {
+  flex: 1;
+  height: 4px;
+  background: var(--paper2);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.spark-fill { height: 100%; border-radius: 99px; }
+
+/* ── CREATOR MINI CARD ── */
+.creator-mini {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+.creator-mini:last-child { border-bottom: none; }
+.c-av {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+.c-name { font-size: 12px; font-weight: 600; }
+.c-meta { font-size: 10px; color: var(--ink3); margin-top: 1px; }
+.c-er { font-size: 12px; font-weight: 700; color: var(--green); }
+
+/* ── COMPETITOR AD CARD ── */
+.ad-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  overflow: hidden;
+  transition: box-shadow .15s;
+}
+.ad-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.07); }
+.ad-card-top { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.ad-brand-icon { width: 30px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.ad-hook { font-size: 11px; font-style: italic; line-height: 1.5; padding: 8px 10px; border-radius: 5px; background: var(--paper); border-left: 3px solid; margin: 10px 14px; }
+.ad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; padding: 0 14px 12px; font-size: 11px; }
+.ad-grid-item span:first-child { color: var(--ink3); display: block; font-size: 10px; }
+.ad-grid-item span:last-child { font-weight: 500; }
+.perf-badge { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
+.perf-strong { background: var(--green-lt); color: var(--green); }
+.perf-weak { background: var(--red-lt); color: var(--red); }
+.perf-avg { background: var(--paper2); color: var(--ink3); }
+
+/* ── PERFORMANCE ── */
+.activation-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.activation-row:last-child { border-bottom: none; }
+.act-timeline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+}
+.act-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.act-line { width: 2px; flex: 1; min-height: 30px; background: var(--border); }
+.verdict-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.v-worked { background: var(--green-lt); color: var(--green); }
+.v-partial { background: var(--gold-lt); color: var(--gold-dk); }
+.v-failed { background: var(--red-lt); color: var(--red); }
+.v-pending { background: var(--paper2); color: var(--ink3); }
+
+/* ── FILTER BAR ── */
+.filter-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+.filter-chip {
+  padding: 5px 11px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--white);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink2);
+  cursor: pointer;
+  font-family: var(--font);
+  transition: all .15s;
+}
+.filter-chip:hover { border-color: var(--ink3); }
+.filter-chip.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.filter-chip.cat-hair.on { background: var(--purple); border-color: var(--purple); }
+.filter-chip.cat-skin.on { background: var(--green); border-color: var(--green); }
+.filter-chip.cat-makeup.on { background: #C2185B; border-color: #C2185B; }
+.filter-chip.cat-hcolor.on { background: var(--red); border-color: var(--red); }
+.filter-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+
+/* ── PLATFORM BADGE ── */
+.plat { font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; }
+.plat-ig { background: #f09433; color: #fff; }
+.plat-tt { background: #010101; color: #fff; }
+.plat-yt { background: #FF0000; color: #fff; }
+.plat-ga { background: #4285F4; color: #fff; }
+.plat-bk { background: #FF8000; color: #fff; }
+.plat-az { background: #FF9900; color: var(--ink); }
+
+/* ── REGION MAP SELECTOR ── */
+.region-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-bottom: 16px; }
+.region-btn {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--white);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink2);
+  cursor: pointer;
+  font-family: var(--font);
+  transition: all .15s;
+  text-align: left;
+}
+.region-btn:hover { border-color: var(--ink3); }
+.region-btn.on { border-color: var(--gold); background: var(--gold-lt); color: var(--gold-dk); }
+.region-count { font-size: 9px; color: var(--ink4); display: block; margin-top: 1px; }
+
+/* ── GLOBAL TREND CARD ── */
+.global-trend {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  padding: 14px;
+  transition: box-shadow .15s;
+}
+.global-trend:hover { box-shadow: 0 3px 14px rgba(0,0,0,.07); }
+.gt-country { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.gt-flag { font-size: 18px; }
+.gt-country-name { font-size: 11px; font-weight: 600; color: var(--ink2); }
+.gt-days { font-size: 10px; color: var(--ink3); }
+.gt-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; line-height: 1.3; }
+.gt-india-eta { font-size: 10px; color: var(--purple); font-weight: 600; background: var(--purple-lt); padding: 2px 7px; border-radius: 4px; display: inline-block; margin-bottom: 8px; }
+.gt-hook { font-size: 11px; font-style: italic; color: var(--ink2); line-height: 1.5; padding: 6px 8px; background: var(--paper); border-radius: 5px; border-left: 2px solid var(--gold); }
+.gt-platforms { display: flex; gap: 4px; margin-top: 8px; }
+
+/* ── SPARKLINE SVG ── */
+.spark-svg { display: block; }
+
+/* ── BUTTONS ── */
+.btn { padding: 8px 16px; border-radius: var(--r); font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--font); border: 1px solid var(--border); background: var(--white); color: var(--ink2); transition: all .15s; }
+.btn:hover { border-color: var(--ink3); background: var(--paper); }
+.btn-gold { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+.btn-gold:hover { background: var(--gold-dk); border-color: var(--gold-dk); color: #fff; }
+.btn-dark { background: var(--ink); border-color: var(--ink); color: #fff; }
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+
+/* ── DATA SOURCE LABEL ── */
+.data-src { font-size: 9px; color: var(--ink4); display: flex; align-items: center; gap: 4px; }
+.data-src .live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: pulse 2s ease-in-out infinite; }
+.data-src .sim-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ── RANK MOVEMENT ── */
+.rank-up { color: var(--green); font-weight: 700; }
+.rank-down { color: var(--red); font-weight: 700; }
+
+/* ── MODAL / DRAWER ── */
+.drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200; display: none; }
+.drawer-overlay.open { display: block; }
+.drawer { position: fixed; right: 0; top: 0; bottom: 0; width: 520px; background: var(--white); z-index: 201; transform: translateX(100%); transition: transform .25s ease; overflow-y: auto; }
+.drawer.open { transform: translateX(0); }
+.drawer-hd { padding: 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--white); }
+.drawer-body { padding: 20px; }
+.drawer-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--ink3); line-height: 1; }
+
+/* ── MISC ── */
+.section-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.section-title { font-size: 16px; font-weight: 700; }
+.section-sub { font-size: 12px; color: var(--ink3); margin-top: 2px; }
+.empty { text-align: center; padding: 40px 20px; color: var(--ink3); font-size: 13px; }
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+.pill { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; }
+.pill-blue { background: var(--blue-lt); color: var(--blue); }
+.pill-green { background: var(--green-lt); color: var(--green); }
+.pill-red { background: var(--red-lt); color: var(--red); }
+.pill-gold { background: var(--gold-lt); color: var(--gold-dk); }
+.pill-purple { background: var(--purple-lt); color: var(--purple); }
+hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-logo">Drishti<span>.</span></div>
+  <nav class="hdr-nav">
+    <button class="hdr-tab active" onclick="showPage('morning')" id="tab-morning">Morning Brief</button>
+    <button class="hdr-tab" onclick="showPage('trends')" id="tab-trends">Global Trends</button>
+    <button class="hdr-tab" onclick="showPage('competitors')" id="tab-competitors">Competitor Intel</button>
+    <button class="hdr-tab" onclick="showPage('performance')" id="tab-performance">Performance Loop</button>
+  </nav>
+  <div class="hdr-right">
+    <div class="region-pill" onclick="toggleRegionPanel()">
+      <div class="region-dot"></div>
+      <span id="active-region-label">Bihar · UP · Maharashtra</span>
+      <span style="font-size:9px;opacity:.5">▾</span>
+    </div>
+    <div class="last-updated" id="last-updated-lbl"></div>
+  </div>
+</header>
+
+<!-- TICKER -->
+<div class="ticker-bar">
+  <div class="ticker-label">Live pulse</div>
+  <div class="ticker-scroll">
+    <div class="ticker-track" id="ticker-track">
+      <div id="t1"></div><div id="t2"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE 1: MORNING BRIEF
+══════════════════════════════════════════ -->
+<div class="page active" id="page-morning">
+
+  <!-- Top meta row -->
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
+    <div>
+      <div style="font-size:24px;font-weight:700;letter-spacing:-.5px" id="morning-greeting">Good morning, Aniket.</div>
+      <div style="font-size:13px;color:var(--ink3);margin-top:3px" id="morning-date"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <select id="morning-cat-filter" onchange="renderMorning()" style="font-size:11px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--white);color:var(--ink);font-family:var(--font)">
+        <option value="all">All categories</option>
+        <option value="skin">Skincare</option>
+        <option value="hair">Haircare</option>
+        <option value="makeup">Makeup</option>
+        <option value="hcolor">Hair Colour</option>
+      </select>
+      <select id="morning-region-filter" onchange="renderMorning()" style="font-size:11px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--white);color:var(--ink);font-family:var(--font)">
+        <option value="all">All regions</option>
+        <option value="Bihar">Bihar</option>
+        <option value="UP">Uttar Pradesh</option>
+        <option value="MH">Maharashtra</option>
+        <option value="Delhi">Delhi NCR</option>
+        <option value="KA">Karnataka</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- KPI strip -->
+  <div class="g4" style="margin-bottom:20px">
+    <div class="card" style="padding:14px">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:6px">Active triggers today</div>
+      <div style="font-size:28px;font-weight:700;color:var(--red)">4</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:2px">2 critical · 2 watch</div>
+    </div>
+    <div class="card" style="padding:14px">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:6px">Creators ready to activate</div>
+      <div style="font-size:28px;font-weight:700;color:var(--ink)">11</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:2px">Across 3 regions · briefed in &lt;24h</div>
+    </div>
+    <div class="card" style="padding:14px">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:6px">Competitor briefs this week</div>
+      <div style="font-size:28px;font-weight:700;color:var(--gold-dk)">14</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:2px">Dot & Key +6 · Minimalist +4</div>
+    </div>
+    <div class="card" style="padding:14px">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:6px">Global trend →IN ETA</div>
+      <div style="font-size:28px;font-weight:700;color:var(--purple)">3</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:2px">Trends arriving India in &lt;4 weeks</div>
+    </div>
+  </div>
+
+  <div class="g-main">
+    <!-- Triggers column -->
+    <div>
+      <div class="section-hd">
+        <div>
+          <div class="section-title">Today's triggers</div>
+          <div class="section-sub">Each trigger = a market signal requiring a creator activation decision</div>
+        </div>
+        <div class="data-src"><div class="sim-dot"></div> Blinkit rank · Amazon BSR · Meta Ads · Google Trends</div>
+      </div>
+      <div id="trigger-list" style="display:flex;flex-direction:column;gap:12px"></div>
+    </div>
+
+    <!-- Right: Rank movement + recommended creators -->
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hd">
+          <div>
+            <div class="card-title">Blinkit rank movement</div>
+            <div class="card-sub">Bihar pin codes · vs last week</div>
+          </div>
+          <div class="data-src"><div class="sim-dot"></div> Scraped daily</div>
+        </div>
+        <div id="rank-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd">
+          <div>
+            <div class="card-title">Recommended today</div>
+            <div class="card-sub">Creators ready to activate in your triggered regions</div>
+          </div>
+        </div>
+        <div id="rec-creators"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE 2: GLOBAL TRENDS
+══════════════════════════════════════════ -->
+<div class="page" id="page-trends">
+  <div class="section-hd" style="margin-bottom:16px">
+    <div>
+      <div class="section-title">Global trend engine</div>
+      <div class="section-sub">What's gaining traction worldwide — and when it'll hit India</div>
+    </div>
+    <div class="data-src"><div class="sim-dot"></div> TikTok Creative Center · YouTube Trends API · Google Trends · Instagram</div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-bar">
+    <span style="font-size:11px;font-weight:600;color:var(--ink3)">Category:</span>
+    <button class="filter-chip on" onclick="filterTrends(this,'all')">All</button>
+    <button class="filter-chip cat-skin" onclick="filterTrends(this,'skin')">Skincare</button>
+    <button class="filter-chip cat-hair" onclick="filterTrends(this,'hair')">Haircare</button>
+    <button class="filter-chip cat-makeup" onclick="filterTrends(this,'makeup')">Makeup</button>
+    <button class="filter-chip cat-hcolor" onclick="filterTrends(this,'hcolor')">Hair Colour</button>
+    <div class="filter-sep"></div>
+    <span style="font-size:11px;font-weight:600;color:var(--ink3)">Origin:</span>
+    <button class="filter-chip on" onclick="filterTrendsRegion(this,'all')">All countries</button>
+    <button class="filter-chip" onclick="filterTrendsRegion(this,'KR')">🇰🇷 Korea</button>
+    <button class="filter-chip" onclick="filterTrendsRegion(this,'US')">🇺🇸 USA</button>
+    <button class="filter-chip" onclick="filterTrendsRegion(this,'UK')">🇬🇧 UK</button>
+    <button class="filter-chip" onclick="filterTrendsRegion(this,'CN')">🇨🇳 China</button>
+    <button class="filter-chip" onclick="filterTrendsRegion(this,'IN')">🇮🇳 India now</button>
+    <div class="filter-sep"></div>
+    <span style="font-size:11px;font-weight:600;color:var(--ink3)">Platform:</span>
+    <button class="filter-chip on" onclick="filterTrendsPlatform(this,'all')">All</button>
+    <button class="filter-chip" onclick="filterTrendsPlatform(this,'tt')">TikTok</button>
+    <button class="filter-chip" onclick="filterTrendsPlatform(this,'ig')">Instagram</button>
+    <button class="filter-chip" onclick="filterTrendsPlatform(this,'yt')">YouTube</button>
+  </div>
+
+  <!-- Arriving soon India -->
+  <div style="margin-bottom:20px">
+    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--purple);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+      <span>⚡</span> Arriving in India soon — act before competitors
+    </div>
+    <div id="arriving-soon" class="g3" style="gap:12px"></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- All trends -->
+  <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:10px">All tracked trends</div>
+  <div id="all-trends-grid" class="g3" style="gap:12px"></div>
+
+  <!-- India specific -->
+  <div class="divider" style="margin-top:20px"></div>
+  <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:10px;margin-top:16px">Trending in India right now</div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-hd"><div class="card-title">Beauty searches · India</div><div class="data-src"><div class="sim-dot"></div> Google Trends IN</div></div>
+      <div id="india-beauty-trends"></div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><div class="card-title">Trending audios · Instagram India</div><div class="data-src"><div class="sim-dot"></div> Apify scrape</div></div>
+      <div id="india-audios"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE 3: COMPETITOR INTEL
+══════════════════════════════════════════ -->
+<div class="page" id="page-competitors">
+  <div class="section-hd" style="margin-bottom:16px">
+    <div>
+      <div class="section-title">Competitor intelligence</div>
+      <div class="section-sub">What they're running, what's working, what's not — category level</div>
+    </div>
+    <div class="data-src"><div class="sim-dot"></div> Meta Ad Library API · Estimated from public data</div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-bar">
+    <span style="font-size:11px;font-weight:600;color:var(--ink3)">Brand:</span>
+    <button class="filter-chip on" onclick="filterComp(this,'all','brand')">All brands</button>
+    <button class="filter-chip" onclick="filterComp(this,'dotkey','brand')">Dot & Key</button>
+    <button class="filter-chip" onclick="filterComp(this,'minimalist','brand')">Minimalist</button>
+    <button class="filter-chip" onclick="filterComp(this,'aqualogica','brand')">Aqualogica</button>
+    <button class="filter-chip" onclick="filterComp(this,'mamaearth','brand')">Mamaearth</button>
+    <button class="filter-chip" onclick="filterComp(this,'sugar','brand')">Sugar</button>
+    <button class="filter-chip" onclick="filterComp(this,'lakme','brand')">Lakmé</button>
+    <div class="filter-sep"></div>
+    <span style="font-size:11px;font-weight:600;color:var(--ink3)">Hook type:</span>
+    <button class="filter-chip on" onclick="filterComp(this,'all','hook')">All hooks</button>
+    <button class="filter-chip" onclick="filterComp(this,'problem','hook')">Problem-solution</button>
+    <button class="filter-chip" onclick="filterComp(this,'ingredient','hook')">Ingredient-led</button>
+    <button class="filter-chip" onclick="filterComp(this,'transformation','hook')">Transformation</button>
+    <button class="filter-chip" onclick="filterComp(this,'social-proof','hook')">Social proof</button>
+    <div class="filter-sep"></div>
+    <span style="font-size:11px;font-weight:600;color:var(--ink3)">Performance:</span>
+    <button class="filter-chip on" onclick="filterComp(this,'all','perf')">All</button>
+    <button class="filter-chip" onclick="filterComp(this,'strong','perf')">Strong</button>
+    <button class="filter-chip" onclick="filterComp(this,'weak','perf')">Weak — exploit gap</button>
+  </div>
+
+  <!-- SOV Bar -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-hd">
+      <div><div class="card-title">Share of voice — <span id="sov-cat-label">All categories</span></div><div class="card-sub">Active ads × estimated reach · Meta Ad Library · June 2025</div></div>
+      <select onchange="updateSOV(this.value)" style="font-size:11px;padding:5px 8px;border:1px solid var(--border);border-radius:var(--r);font-family:var(--font)">
+        <option value="skin" selected>Skincare</option>
+        <option value="hair">Haircare</option>
+        <option value="makeup">Makeup</option>
+        <option value="hcolor">Hair Colour</option>
+      </select>
+    </div>
+    <div id="sov-bars"></div>
+  </div>
+
+  <!-- Ad cards grid -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3)">Active campaigns</div>
+    <div id="comp-count" style="font-size:11px;color:var(--ink3)"></div>
+  </div>
+  <div id="comp-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE 4: PERFORMANCE LOOP
+══════════════════════════════════════════ -->
+<div class="page" id="page-performance">
+  <div class="section-hd" style="margin-bottom:16px">
+    <div>
+      <div class="section-title">Performance feedback loop</div>
+      <div class="section-sub">Activation → market movement → verdict. Refine every week.</div>
+    </div>
+    <div class="data-src"><div class="sim-dot"></div> Blinkit rank · Instagram Insights · Google Trends post-activation</div>
+  </div>
+
+  <!-- Summary -->
+  <div class="g4" style="margin-bottom:20px">
+    <div class="card" style="padding:14px"><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:6px">Activations this month</div><div style="font-size:28px;font-weight:700">12</div></div>
+    <div class="card" style="padding:14px"><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--green);margin-bottom:6px">Worked</div><div style="font-size:28px;font-weight:700;color:var(--green)">7</div><div style="font-size:11px;color:var(--ink3)">Rank moved ↑ + ER &gt;5%</div></div>
+    <div class="card" style="padding:14px"><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--gold-dk);margin-bottom:6px">Partial</div><div style="font-size:28px;font-weight:700;color:var(--gold-dk)">3</div><div style="font-size:11px;color:var(--ink3)">ER ok, rank flat</div></div>
+    <div class="card" style="padding:14px"><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--red);margin-bottom:6px">Didn't work</div><div style="font-size:28px;font-weight:700;color:var(--red)">2</div><div style="font-size:11px;color:var(--ink3)">No rank movement</div></div>
+  </div>
+
+  <div class="g-main-wide">
+    <div>
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:12px">Activation log</div>
+      <div class="card">
+        <div id="activation-log"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hd"><div class="card-title">What's working</div></div>
+        <div id="what-working"></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-title">What's not — and why</div></div>
+        <div id="what-not"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DRAWER for trigger detail -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-hd">
+    <div>
+      <div style="font-size:15px;font-weight:700" id="drawer-title">Trigger detail</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:2px" id="drawer-sub"></div>
+    </div>
+    <button class="drawer-close" onclick="closeDrawer()">×</button>
+  </div>
+  <div class="drawer-body" id="drawer-body"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════
+
+const TRIGGERS = [
+  {
+    id:'t1', urgency:'critical', cat:'skin', region:'Bihar',
+    headline:"Pond's Super Light Gel losing ground — Dot & Key gaining in Bihar moisturiser",
+    regionDetail:'Patna · Muzaffarpur · Gaya · Bhagalpur',
+    product:"Pond's Super Light Gel", competitor:"Dot & Key Waterlight Gel",
+    blinkit: {rank:7, prev:3, delta:-4, searchShare:'14%', prevShare:'23%'},
+    amazon: {bsr:142, prevBsr:89, delta:-53, rating:4.3, reviews:12400},
+    competitorBlinkit: {rank:2, prev:5, delta:3},
+    insight:"Pond's has dropped 4 positions on Blinkit Bihar in 7 days. Dot & Key Waterlight Gel climbed from #5 to #2. The shift correlates with 6 new Dot & Key creator briefs launched last week using an 'SPF-free lightweight gel' hook — directly attacking the Pond's positioning. No L'Oréal CPD creator has posted moisturiser content in Bihar in 18 days.",
+    window:'48 hours — act before rank drops further',
+    creators:[
+      {name:'Shubhra Jha',handle:'@shu_bruh_',lang:'Maithili',reach:'4.2M',er:'6.1%',lastPost:'8 days ago',fit:98,colors:['#FEF3C7','#78350F']},
+      {name:'Razika Saifi',handle:'@its_razika',lang:'Hindi',reach:'1.5M',er:'5.6%',lastPost:'3 days ago',fit:91,colors:['#EAF3DE','#14532D']},
+      {name:'Labi Singh',handle:'@labi_singh27',lang:'Hindi',reach:'310K',er:'9.4%',lastPost:'5 days ago',fit:87,colors:['#DCFCE7','#14532D']},
+    ],
+    hook:"The moisturiser I've been using in Bihar's heat — and why I switched",
+    format:'Reel · 30–45s · Problem-solution · authentic review',
+    platformSource:'Blinkit scrape · Meta Ad Library · Google Trends Bihar'
+  },
+  {
+    id:'t2', urgency:'critical', cat:'hair', region:'UP',
+    headline:"Scalp health content gap — no brand owning the space in UP right now",
+    regionDetail:'Lucknow · Kanpur · Varanasi · Agra',
+    product:'Garnier Fructis Scalp Serum', competitor:'Pilgrim Scalp Serum',
+    blinkit:{rank:5,prev:5,delta:0,searchShare:'18%',prevShare:'18%'},
+    amazon:{bsr:210,prevBsr:190,delta:-20,rating:4.1,reviews:8200},
+    competitorBlinkit:{rank:3,prev:8,delta:5},
+    insight:"'Scalp health' searches in UP are up +67% this week — driven by a TikTok wave from Korea that's hitting Indian Instagram. Pilgrim has activated 3 creators in this space. Garnier Fructis Scalp Serum has zero creator coverage in UP this month despite being in the category. The window to be first-mover is closing fast.",
+    window:'3–5 days before Pilgrim locks up the narrative',
+    creators:[
+      {name:'Kratika Sengar',handle:'@itsmekratika',lang:'Hindi',reach:'1.2M',er:'6.8%',lastPost:'2 days ago',fit:95,colors:['#EEEDFE','#5B21B6']},
+      {name:'Shambhavi Singh',handle:'@hellofromshambhavi',lang:'Hindi',reach:'420K',er:'8.2%',lastPost:'4 days ago',fit:89,colors:['#DBEAFE','#1E3A8A']},
+    ],
+    hook:'"Why your hair fall is a scalp problem — not a hair problem"',
+    format:'Reel · 45–60s · Educational-first · ingredient reveal',
+    platformSource:'Google Trends UP · TikTok Creative Center · Meta Ad Library'
+  },
+  {
+    id:'t3', urgency:'high', cat:'makeup', region:'MH',
+    headline:"'Blush draping' searches up +89% in Maharashtra — no Maybelline creator in the format",
+    regionDetail:'Mumbai · Pune · Nashik',
+    product:'Maybelline Fit Me Blush', competitor:'Sugar Cosmetics Sheer Talc-Free Blush',
+    blinkit:{rank:4,prev:4,delta:0,searchShare:'22%',prevShare:'21%'},
+    amazon:{bsr:67,prevBsr:72,delta:5,rating:4.4,reviews:23000},
+    competitorBlinkit:{rank:2,prev:3,delta:1},
+    insight:"Blush draping is the fastest-growing makeup format in MH right now — driven by Korean beauty influence hitting Mumbai and Pune creators. Sugar Cosmetics has already briefed 2 creators in this format. Maybelline Fit Me Blush is the category leader on Amazon MH but has zero creator content in 'blush draping' format. First-mover advantage available for 1–2 weeks.",
+    window:'5–7 days',
+    creators:[
+      {name:'Hindavi Patil',handle:'@hindavi_satkar_patil',lang:'Marathi',reach:'1.4M',er:'6.3%',lastPost:'1 day ago',fit:96,colors:['#EAF3DE','#14532D']},
+      {name:'Ishika Bhargava',handle:'@ishika_bhargava',lang:'Hindi/English',reach:'520K',er:'7.1%',lastPost:'6 days ago',fit:88,colors:['#FCE4F0','#831843']},
+    ],
+    hook:'"Blush draping changed how I do my makeup — here\'s the Maybelline version"',
+    format:'Reel · 20–30s · Tutorial · Before-after reveal',
+    platformSource:'Google Trends MH · Instagram scrape · TikTok Creative Center'
+  },
+  {
+    id:'t4', urgency:'watch', cat:'hcolor', region:'UP',
+    headline:"At-home hair colour searches up +34% in UP — competitor Streax responding fast",
+    regionDetail:'UP wide · especially Agra · Meerut · Allahabad',
+    product:"L'Oréal Paris Excellence Creme", competitor:'Streax · Garnier Color Naturals',
+    blinkit:{rank:2,prev:2,delta:0,searchShare:'31%',prevShare:'30%'},
+    amazon:{bsr:34,prevBsr:38,delta:4,rating:4.5,reviews:41000},
+    competitorBlinkit:{rank:4,prev:6,delta:2},
+    insight:"L'Oréal Paris Excellence holds the strongest Blinkit position in UP hair colour, but Streax has launched 4 creator ads this week using an 'at-home convenience + cost saving' hook that's gaining traction with the 25–40 women segment in UP. The search surge suggests underlying demand — reinforce with creator content before Streax gains narrative ownership.",
+    window:'This week',
+    creators:[
+      {name:'Tamanna Bhati',handle:'@tamanna.gurjar01',lang:'Hindi',reach:'1.8M',er:'5.1%',lastPost:'3 days ago',fit:88,colors:['#FEF3C7','#78350F']},
+      {name:'Saubhagya Dixit',handle:'@thesaubhagyadixit',lang:'Hindi',reach:'380K',er:'9.1%',lastPost:'7 days ago',fit:83,colors:['#EDE0FF','#5B21B6']},
+    ],
+    hook:'"I coloured my hair at home for ₹350 and this is why it actually worked"',
+    format:'Reel · 40–60s · Transformation reveal · First-person',
+    platformSource:'Google Trends UP · Meta Ad Library · Blinkit scrape'
+  }
+];
+
+const RANK_DATA = [
+  {product:"Pond's Super Light Gel",cat:'skin',rank:7,prev:3,delta:-4,brand:'Pond\'s'},
+  {product:'Dot & Key Waterlight Gel',cat:'skin',rank:2,prev:5,delta:3,brand:'Dot & Key',comp:true},
+  {product:'Garnier Vitamin C Serum',cat:'skin',rank:5,prev:4,delta:-1,brand:'Garnier',you:true},
+  {product:'L\'Oréal Paris Revitalift',cat:'skin',rank:8,prev:7,delta:-1,brand:'L\'Oréal',you:true},
+  {product:'Garnier Fructis Hair Food',cat:'hair',rank:3,prev:3,delta:0,brand:'Garnier',you:true},
+  {product:'Mamaearth Onion Shampoo',cat:'hair',rank:1,prev:2,delta:1,brand:'Mamaearth',comp:true},
+  {product:'Maybelline Fit Me Foundation',cat:'makeup',rank:2,prev:2,delta:0,brand:'Maybelline',you:true},
+  {product:'L\'Oréal Paris Excellence',cat:'hcolor',rank:2,prev:2,delta:0,brand:'L\'Oréal',you:true},
+];
+
+const GLOBAL_TRENDS = [
+  {id:'gt1',country:'KR',flag:'🇰🇷',name:'Skin flooding',cat:'skin',platform:['tt','ig'],velocity:96,indiaEta:'2–3 weeks',origin:'Seoul creators',description:'Layering multiple hydrating toners before moisturiser to "flood" the skin with hydration.',hook:'"My skin drinks water before it gets cream — the Korean method"',skuFit:"L'Oréal Revitalift HA Serum",phase:'breaking'},
+  {id:'gt2',country:'US',flag:'🇺🇸',name:'Slugging revival',cat:'skin',platform:['tt','ig'],velocity:88,indiaEta:'4–5 weeks',origin:'US TikTok dermatologists',description:'Occlusives as a last step. Petroleum jelly or heavy cream to lock in all hydration overnight.',hook:'"Night routine that changed my skin in 7 days — the slugging method"',skuFit:'Garnier Micellar Water → Skin Active Moisturiser',phase:'growing'},
+  {id:'gt3',country:'KR',flag:'🇰🇷',name:'Glass hair',cat:'hair',platform:['yt','ig'],velocity:84,indiaEta:'3–4 weeks',origin:'K-pop styling',description:'Mirror-shine straight hair that looks literally glassy. No frizz, maximum gloss.',hook:'"The technique that gives you glass hair at home — no salon"',skuFit:'Garnier Fructis Sleek & Shine · L\'Oréal Elvive Extraordinary Oil',phase:'breaking'},
+  {id:'gt4',country:'US',flag:'🇺🇸',name:'Blush draping',cat:'makeup',platform:['tt','ig'],velocity:91,indiaEta:'Already arriving',origin:'Makeup artists NYC/LA',description:'Blush applied high across nose bridge and temples — not just cheeks. 3D flush effect.',hook:'"Stop putting blush on your cheeks — here\'s where it actually goes"',skuFit:'Maybelline Fit Me Blush',phase:'arriving'},
+  {id:'gt5',country:'CN',flag:'🇨🇳',name:'Scalp spa ritual',cat:'hair',platform:['tt','yt'],velocity:79,indiaEta:'5–6 weeks',origin:'Douyin / Chinese beauty',description:'Multi-step scalp treatment before washing: scrub, serum, massage, mask.',hook:'"Treat your scalp like your face — the ritual that stopped my hair fall"',skuFit:'Garnier Fructis Scalp Serum',phase:'growing'},
+  {id:'gt6',country:'UK',flag:'🇬🇧',name:'Lip staining method',cat:'makeup',platform:['ig','tt'],velocity:74,indiaEta:'6–8 weeks',origin:'London beauty creators',description:'Using lip products as blush and vice versa for a monochromatic editorial look.',hook:'"One product for lips AND blush — the edit in two seconds"',skuFit:'Maybelline Superstay Matte Ink · NYX Butter Gloss',phase:'early'},
+  {id:'gt7',country:'KR',flag:'🇰🇷',name:'Double cleansing routine',cat:'skin',platform:['yt','ig'],velocity:82,indiaEta:'Already in India',origin:'K-beauty staple',description:'Oil cleanser first to remove makeup, then water-based for deep clean. Mainstream in India now.',hook:'"Your skin is never actually clean unless you do this first"',skuFit:'Garnier Micellar Water · Garnier Bright Complete',phase:'mature'},
+  {id:'gt8',country:'US',flag:'🇺🇸',name:'Hair colour science',cat:'hcolor',platform:['yt','tt'],velocity:77,indiaEta:'3–4 weeks',origin:'US chemistry TikTok',description:'Creators explaining the actual chemistry of hair dye — developer volume, pigment molecules.',hook:'"Why your at-home colour keeps going wrong — the science"',skuFit:'L\'Oréal Paris Excellence Creme · Colorista',phase:'growing'},
+];
+
+const INDIA_TRENDS = [
+  {term:'Glass skin routine',score:92,delta:'+18%',cat:'skin',type:'hot'},
+  {term:'Scalp health serum',score:87,delta:'+67%',cat:'hair',type:'hot'},
+  {term:'Blush draping tutorial',score:84,delta:'+89%',cat:'makeup',type:'rising'},
+  {term:'Pond\'s light gel alternative',score:81,delta:'+24%',cat:'skin',type:'watch'},
+  {term:'Onion oil for hair fall',score:78,delta:'+12%',cat:'hair',type:'hot'},
+  {term:'At-home hair colour',score:74,delta:'+34%',cat:'hcolor',type:'rising'},
+];
+
+const INDIA_AUDIOS = [
+  {title:'APT.',artist:'Bruno Mars × Rose',reels:'3.7M',growth:'+410%',hook:'High — GRWM / makeup'},
+  {title:'Chaleya (Jawan)',artist:'Arijit Singh × Shilpa Rao',reels:'4.1M',growth:'+180%',hook:'High — transformation'},
+  {title:'Pasoori',artist:'Ali Sethi × Shae Gill',reels:'6.2M',growth:'+55%',hook:'Any aesthetic — evergreen'},
+  {title:'Mere Mehboob',artist:'Stebin Ben',reels:'2.8M',growth:'+340%',hook:'Slow-mo beauty reveal'},
+  {title:'O Bedardeya',artist:'Pritam',reels:'2.3M',growth:'+290%',hook:'Honest product review'},
+];
+
+const COMP_ADS = [
+  {brand:'Dot & Key',slug:'dotkey',cat:'skin',format:'Reel · 30s',hookType:'problem',hook:'"Your skin barrier is broken — fix it in 3 steps"',creators:6,spend:'₹2L–₹5L/mo',started:'2 Jun',perf:'strong',perfReason:'High saves, 8.2% avg ER across 6 creators',cta:'Shop now',color:'#2E7D32',bg:'#EAF3DE',angle:'Dermatology-lite · problem-first'},
+  {brand:'Minimalist',slug:'minimalist',cat:'skin',format:'Reel · 45s + Carousel',hookType:'ingredient',hook:'"10% Niacinamide vs 2% — the difference your skin actually feels"',creators:4,spend:'₹5L–₹10L/mo',started:'28 May',perf:'strong',perfReason:'Saves 3.2x category average — science audience',cta:'Learn more',color:'#444',bg:'#F5F5F5',angle:'Science-first · skeptic audience'},
+  {brand:'Aqualogica',slug:'aqualogica',cat:'skin',format:'Reel · 20s',hookType:'social-proof',hook:'"The SPF that doesn\'t leave a white cast — tested on 6 skin tones"',creators:4,spend:'₹2L–₹5L/mo',started:'5 Jun',perf:'strong',perfReason:'Inclusivity angle resonating — growing ER WoW',cta:'Try now',color:'#0077B6',bg:'#E3F2FD',angle:'Inclusivity · Indian skin tone focus'},
+  {brand:'Mamaearth',slug:'mamaearth',cat:'hair',format:'Reel · 60s',hookType:'ingredient',hook:'"Onion oil + Biotin = the only hairfall combo"',creators:12,spend:'₹10L–₹20L/mo',started:'1 Jun',perf:'avg',perfReason:'High volume, ER declining WoW — creative fatigue',cta:'Buy now',color:'#E76F00',bg:'#FFF3E0',angle:'Ingredient hero · Ayurvedic'},
+  {brand:'Pilgrim',slug:'pilgrim',cat:'hair',format:'Reel · 25s',hookType:'problem',hook:'"Scalp first. Hair second. This is the correct order."',creators:3,spend:'₹1L–₹2L/mo',started:'7 Jun',perf:'strong',perfReason:'Timing nailed — scalp trend rising +67% in UP',cta:'Shop',color:'#2E7D32',bg:'#EAF3DE',angle:'Scalp health · dermat-backed'},
+  {brand:'Sugar Cosmetics',slug:'sugar',cat:'makeup',format:'Reel · 30s',hookType:'social-proof',hook:'"12 hours later. I wore this all day. Honest."',creators:8,spend:'₹5L–₹10L/mo',started:'3 Jun',perf:'strong',perfReason:'Longevity claim + micro-creator mix = high trust ER',cta:'Shop now',color:'#E91E63',bg:'#FCE4F0',angle:'Longevity claim · everyday wear'},
+  {brand:'Lakmé',slug:'lakme',cat:'makeup',format:'Reel · 15s',hookType:'transformation',hook:'"Absolute foundation. Under ₹300. Unfiltered."',creators:5,spend:'₹5L–₹10L/mo',started:'31 May',perf:'weak',perfReason:'15s too short — product demo incomplete, low saves',cta:'Buy',color:'#FF5722',bg:'#FFF0EB',angle:'Value positioning · mass market'},
+  {brand:'Streax',slug:'streax',cat:'hcolor',format:'Reel · 40s',hookType:'transformation',hook:'"Salon colour at home — nobody can tell the difference"',creators:4,spend:'₹2L–₹5L/mo',started:'4 Jun',perf:'avg',perfReason:'Transformation angle working but hook not differentiated',cta:'Shop',color:'#8B6E2A',bg:'#F3ECD8',angle:'Convenience · cost saving'},
+  {brand:'Dot & Key',slug:'dotkey',cat:'skin',format:'Carousel · 7 slides',hookType:'ingredient',hook:'"Why peptides are the new retinol — for beginners"',creators:2,spend:'₹1L–₹2L/mo',started:'8 Jun',perf:'strong',perfReason:'Carousel saves 5.1x avg — education format paying off',cta:'Learn',color:'#2E7D32',bg:'#EAF3DE',angle:'Education · ingredient positioning'},
+];
+
+const SOV_DATA = {
+  skin:[
+    {brand:"L'Oréal Paris",sov:22,ads:38,color:'#C2185B',you:true},
+    {brand:'Garnier',sov:13,ads:22,color:'#5B4FCF',you:true},
+    {brand:'Minimalist',sov:18,ads:31,color:'#444'},
+    {brand:'Dot & Key',sov:15,ads:26,color:'#2E7D32'},
+    {brand:'Aqualogica',sov:10,ads:17,color:'#0077B6'},
+    {brand:'Mamaearth',sov:9,ads:15,color:'#E76F00'},
+    {brand:'Plum',sov:7,ads:12,color:'#9C27B0'},
+    {brand:'Others',sov:6,ads:0,color:'#ccc'},
+  ],
+  hair:[
+    {brand:"L'Oréal Paris",sov:24,ads:42,color:'#C2185B',you:true},
+    {brand:'Garnier',sov:19,ads:34,color:'#5B4FCF',you:true},
+    {brand:'Mamaearth',sov:14,ads:25,color:'#E76F00'},
+    {brand:'Pilgrim',sov:7,ads:12,color:'#2E7D32'},
+    {brand:'Dove',sov:12,ads:21,color:'#444'},
+    {brand:'Indulekha',sov:10,ads:17,color:'#8B6E2A'},
+    {brand:'Others',sov:14,ads:0,color:'#ccc'},
+  ],
+  makeup:[
+    {brand:'Maybelline',sov:27,ads:48,color:'#C2185B',you:true},
+    {brand:'Sugar Cosmetics',sov:16,ads:28,color:'#E91E63'},
+    {brand:'NYX',sov:14,ads:24,color:'#18170F',you:true},
+    {brand:'Lakmé',sov:10,ads:18,color:'#FF5722'},
+    {brand:"L'Oréal Paris",sov:12,ads:21,color:'#9C27B0',you:true},
+    {brand:'Colorbar',sov:8,ads:14,color:'#C62828'},
+    {brand:'Others',sov:13,ads:0,color:'#ccc'},
+  ],
+  hcolor:[
+    {brand:"L'Oréal Paris",sov:31,ads:54,color:'#C2185B',you:true},
+    {brand:'Garnier',sov:22,ads:38,color:'#5B4FCF',you:true},
+    {brand:'Streax',sov:14,ads:24,color:'#8B6E2A'},
+    {brand:'Bblunt',sov:11,ads:19,color:'#444'},
+    {brand:'Godrej Expert',sov:10,ads:17,color:'#E76F00'},
+    {brand:'Others',sov:12,ads:0,color:'#ccc'},
+  ]
+};
+
+const ACTIVATIONS = [
+  {creator:'Shubhra Jha',handle:'@shu_bruh_',region:'Bihar',cat:'Haircare',product:'Garnier Fructis Hair Food',collab:'GC',goLive:'3 Jun',weekPost:'10 Jun',verdict:'worked',er:'6.8%',blinkitDelta:'+2 positions',reach:'3.8M',why:'Maithili language + Hair Food timing aligned with search spike. Garnier Hair Food Bihar searches +22% week of activation.',colors:['#FEF3C7','#78350F']},
+  {creator:'Kratika Sengar',handle:'@itsmekratika',region:'UP',cat:'Skincare',product:'L\'Oréal Revitalift HA Serum',collab:'Paid',goLive:'5 Jun',weekPost:'12 Jun',verdict:'partial',er:'5.2%',blinkitDelta:'Flat',reach:'980K',why:'ER was solid but Blinkit rank didn\'t move. Hypothesis: serum category in UP needs more education-first hooks — transformation content alone not converting to purchase intent.',colors:['#EEEDFE','#5B21B6']},
+  {creator:'Hindavi Patil',handle:'@hindavi_satkar_patil',region:'MH',cat:'Makeup',product:'Maybelline Fit Me Foundation',collab:'GC',goLive:'1 Jun',weekPost:'8 Jun',verdict:'worked',er:'7.4%',blinkitDelta:'+3 positions',reach:'1.1M',why:'Marathi language in MH makeup — extremely high saves rate. Foundation + MH summer humidity positioning resonated.',colors:['#EAF3DE','#14532D']},
+  {creator:'Dolly Singh',handle:'@dollysingh',region:'UP/Delhi',cat:'Makeup',product:'Maybelline Sky High Mascara',collab:'Paid',goLive:'28 May',weekPost:'4 Jun',verdict:'worked',er:'5.9%',blinkitDelta:'+1 position',reach:'2.6M',why:'Sky High Mascara hook timed well with GRWM content wave. Broad UP/Delhi reach at 2.8M drove significant search volume uplift.',colors:['#FCE4F0','#831843']},
+  {creator:'Pooja Kumari Jha',handle:'@_igpoojaa',region:'Bihar',cat:'Skincare',product:'Garnier Bright Complete Vitamin C',collab:'GC',goLive:'7 Jun',weekPost:'14 Jun',verdict:'pending',er:'—',blinkitDelta:'—',reach:'—',why:'Activation too recent — checking rank movement next week.',colors:['#FEECEC','#9A3412']},
+  {creator:'Meenal Shah',handle:'@meenalshahofficial',region:'MH',cat:'Haircare',product:'Garnier Fructis Scalp Serum',collab:'GC',goLive:'2 Jun',weekPost:'9 Jun',verdict:'failed',er:'3.1%',blinkitDelta:'Flat',reach:'340K',why:'Hook was too generic — "hair care routine" without scalp-specific angle. Pilgrims\' concurrent activation with a sharper scalp problem-first hook dominated the week\'s narrative. Lesson: when a trend is rising, the hook needs to name the trend explicitly.',colors:['#DCFCE7','#14532D']},
+];
+
+const TICKER_DATA = [
+  {tag:'critical',type:'hot',text:"Pond's Blinkit rank: Bihar dropped #3→#7 in 7 days. Activate now."},
+  {tag:'global',type:'global',text:'Skin flooding trend (Korea) — India ETA 2–3 weeks. Brief Revitalift serum creators.'},
+  {tag:'competitor',type:'watch',text:'Dot & Key: 9 active ads in Skincare. Highest SOV player. +3pts MoM.'},
+  {tag:'rising',type:'rising',text:'Scalp health searches +67% UP this week — Pilgrim already briefed 3 creators.'},
+  {tag:'global',type:'global',text:'Glass hair trend (Korea) — India ETA 3–4 weeks. Align Garnier Elvive Extraordinary Oil.'},
+  {tag:'critical',type:'hot',text:'Blush draping MH searches +89% — no Maybelline creator in this format yet.'},
+  {tag:'rising',type:'rising',text:'"Chaleya" still top audio — 4.1M Reels. Transformation hooks performing highest.'},
+  {tag:'competitor',type:'watch',text:'Minimalist carousel education format: saves 5.1x category avg. Study the format.'},
+  {tag:'global',type:'global',text:'Slugging revival (US) — 4–5 weeks to India. Garnier Skin Active positioning window.'},
+  {tag:'rising',type:'rising',text:'At-home hair colour UP searches +34%. Streax responding with 4 creator ads.'},
+];
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  setDateTime();
+  buildTicker();
+  renderMorning();
+  renderTrends('all','all','all');
+  renderCompetitors();
+  renderPerformance();
+  updateSOV('skin');
+});
+
+// stub — region panel UI can be expanded later
+function toggleRegionPanel() {
+  const regions = ['Bihar · UP · Maharashtra', 'All India', 'Bihar only', 'UP only', 'Maharashtra only'];
+  const lbl = document.getElementById('active-region-label');
+  const cur = regions.indexOf(lbl.textContent);
+  lbl.textContent = regions[(cur + 1) % regions.length];
+}
+
+function setDateTime() {
+  const now = new Date();
+  const h = now.getHours();
+  const greeting = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const el = document.getElementById('morning-greeting');
+  if(el) el.textContent = `${greeting}, Aniket.`;
+  const del = document.getElementById('morning-date');
+  if(del) del.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} · L'Oréal CPD`;
+  const lu = document.getElementById('last-updated-lbl');
+  if(lu) lu.textContent = `Updated ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`;
+}
+
+// ════════════════════════════════════════
+// TICKER
+// ════════════════════════════════════════
+function buildTicker() {
+  const html = TICKER_DATA.map(t => {
+    const tagMap = {hot:'t-hot',rising:'t-rising',watch:'t-watch',global:'t-global'};
+    const labels = {hot:'🔥 Alert',rising:'📈 Rising',watch:'⚠ Watch',global:'🌍 Global'};
+    return `<div class="ticker-item"><span class="t-tag ${tagMap[t.type]||'t-watch'}">${labels[t.type]||t.tag}</span><span>${t.text}</span></div>`;
+  }).join('');
+  ['t1','t2'].forEach(id => { const el=document.getElementById(id); if(el) el.innerHTML=html; });
+}
+
+// ════════════════════════════════════════
+// PAGE NAV
+// ════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.hdr-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ════════════════════════════════════════
+// MORNING
+// ════════════════════════════════════════
+function renderMorning() {
+  const catF = document.getElementById('morning-cat-filter')?.value || 'all';
+  const regF = document.getElementById('morning-region-filter')?.value || 'all';
+  let triggers = TRIGGERS;
+  if(catF !== 'all') triggers = triggers.filter(t=>t.cat===catF);
+  if(regF !== 'all') triggers = triggers.filter(t=>t.region===regF);
+
+  const urgColors = {critical:['u-critical','#C62828'],high:['u-high','#C9A84C'],watch:['u-watch','#1A56A0']};
+  const urgLabels = {critical:'🔴 Critical — act within 48h',high:'🟡 High — act this week',watch:'🔵 Watch — monitor'};
+  const catColors = {skin:'#2E7D32',hair:'#5B4FCF',makeup:'#C2185B',hcolor:'#C62828'};
+  const catLabels = {skin:'Skincare',hair:'Haircare',makeup:'Makeup',hcolor:'Hair Colour'};
+
+  document.getElementById('trigger-list').innerHTML = triggers.map(t => {
+    const [urgClass] = urgColors[t.urgency];
+    return `<div class="trigger-card" onclick="openDrawer('${t.id}')">
+      <div class="trigger-top">
+        <div class="trigger-urgency ${urgClass}">${urgLabels[t.urgency]}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+          <span class="pill" style="background:${catColors[t.cat]}20;color:${catColors[t.cat]}">${catLabels[t.cat]}</span>
+          <span style="font-size:10px;color:var(--ink3)">·</span>
+          <span class="plat-bk plat" style="font-size:9px">Blinkit</span>
+          <span class="plat-az plat" style="font-size:9px">Amazon</span>
+          <span class="plat-ig plat" style="font-size:9px">Instagram</span>
+        </div>
+        <div class="trigger-headline">${t.headline}</div>
+        <div class="trigger-region">📍 ${t.region} · ${t.regionDetail}</div>
+      </div>
+      <div class="trigger-body">
+        <div class="trigger-stat-row">
+          <div class="tstat"><div class="tstat-val ${t.blinkit.delta<0?'rank-down':'rank-up'}">#${t.blinkit.rank} ${t.blinkit.delta<0?'↓':'↑'}</div><div class="tstat-lbl">Blinkit rank<br>(was #${t.blinkit.prev})</div></div>
+          <div class="tstat"><div class="tstat-val">${t.blinkit.searchShare}</div><div class="tstat-lbl">Search share<br>(was ${t.blinkit.prevShare})</div></div>
+          <div class="tstat"><div class="tstat-val" style="color:var(--red)">#${t.blinkit.rank > t.blinkit.prev ? '':''}${t.blinkit.delta < 0 ? Math.abs(t.blinkit.delta)+' lost' : t.blinkit.delta+' gained'}</div><div class="tstat-lbl">Positions<br>7-day change</div></div>
+          <div class="tstat"><div class="tstat-val">${t.creators.length}</div><div class="tstat-lbl">Creators<br>ready to go</div></div>
+        </div>
+        <div class="trigger-insight">${t.insight.substring(0,160)}…</div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <button class="trigger-cta" onclick="event.stopPropagation();openDrawer('${t.id}')">View full trigger + activate →</button>
+          <div style="font-size:10px;color:var(--ink3)">Window: ${t.window}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('') || '<div class="empty">No triggers match current filters.</div>';
+
+  // Rank list
+  document.getElementById('rank-list').innerHTML = RANK_DATA.slice(0,6).map(r => `
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
+      <div style="width:28px;height:28px;border-radius:6px;background:${r.you?'#EAF3DE':r.comp?'#FEECEC':'var(--paper2)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${r.you?'#2E7D32':r.comp?'#C62828':'var(--ink3)'};flex-shrink:0">#${r.rank}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.product}</div>
+        <div style="font-size:10px;color:var(--ink3)">${r.brand}${r.you?' · You':r.comp?' · Competitor':''}</div>
+      </div>
+      <div class="stat-pill ${r.delta>0?'up':r.delta<0?'down':'flat'}">${r.delta>0?'↑+'+r.delta:r.delta<0?'↓'+r.delta:'→'}</div>
+    </div>`).join('');
+
+  // Recommended creators (top 3 across all triggers)
+  const topCreators = TRIGGERS.flatMap(t=>t.creators.map(c=>({...c,triggerRegion:t.region,triggerCat:t.cat}))).slice(0,4);
+  document.getElementById('rec-creators').innerHTML = topCreators.map(c => `
+    <div class="creator-mini">
+      <div class="c-av" style="background:${c.colors[0]};color:${c.colors[1]}">${c.name.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+      <div style="flex:1">
+        <div class="c-name">${c.name} <span class="pill pill-blue">${c.triggerRegion}</span></div>
+        <div class="c-meta">${c.lang} · ${c.reach} · Last post ${c.lastPost}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="c-er">${c.er}</div>
+        <div style="font-size:9px;color:var(--ink3)">ER</div>
+      </div>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════
+// DRAWER
+// ════════════════════════════════════════
+function openDrawer(id) {
+  const t = TRIGGERS.find(x=>x.id===id); if(!t) return;
+  document.getElementById('drawer-title').textContent = t.headline.substring(0,60)+'…';
+  document.getElementById('drawer-sub').textContent = `${t.region} · ${t.regionDetail}`;
+  const catColors={skin:'#2E7D32',hair:'#5B4FCF',makeup:'#C2185B',hcolor:'#C62828'};
+  document.getElementById('drawer-body').innerHTML = `
+    <div style="margin-bottom:18px">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:10px">Market signal</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div style="padding:12px;background:var(--paper);border-radius:var(--r);border:1px solid var(--border)">
+          <div style="font-size:10px;color:var(--ink3);margin-bottom:4px">Your product</div>
+          <div style="font-size:12px;font-weight:600">${t.product}</div>
+          <div style="font-size:20px;font-weight:700;color:${t.blinkit.delta<0?'var(--red)':'var(--green)'};margin-top:6px">#${t.blinkit.rank} <span style="font-size:11px;color:var(--ink3)">(was #${t.blinkit.prev})</span></div>
+          <div style="font-size:10px;color:var(--ink3)">Blinkit ${t.region}</div>
+        </div>
+        <div style="padding:12px;background:var(--paper);border-radius:var(--r);border:1px solid var(--border)">
+          <div style="font-size:10px;color:var(--ink3);margin-bottom:4px">Competitor gaining</div>
+          <div style="font-size:12px;font-weight:600">${t.competitor}</div>
+          <div style="font-size:20px;font-weight:700;color:var(--green);margin-top:6px">#${t.competitorBlinkit.rank} <span style="font-size:11px;color:var(--ink3)">(was #${t.competitorBlinkit.prev})</span></div>
+          <div style="font-size:10px;color:var(--ink3)">Blinkit ${t.region}</div>
+        </div>
+      </div>
+      <div style="padding:12px;background:var(--paper);border-radius:var(--r);font-size:12px;line-height:1.7;color:var(--ink2);border-left:3px solid ${catColors[t.cat]}">${t.insight}</div>
+    </div>
+    <div style="margin-bottom:18px">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:10px">Recommended response</div>
+      <div style="background:var(--paper);border-radius:var(--r);padding:12px;margin-bottom:10px">
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:4px">Hook</div>
+        <div style="font-size:13px;font-style:italic;font-weight:500">${t.hook}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:var(--paper);border-radius:var(--r);padding:10px">
+          <div style="font-size:10px;color:var(--ink3)">Format</div>
+          <div style="font-size:11px;font-weight:500;margin-top:2px">${t.format}</div>
+        </div>
+        <div style="background:var(--paper);border-radius:var(--r);padding:10px">
+          <div style="font-size:10px;color:var(--ink3)">Activation window</div>
+          <div style="font-size:11px;font-weight:600;color:var(--red);margin-top:2px">${t.window}</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:10px">Recommended creators (${t.creators.length})</div>
+      ${t.creators.map(c=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--paper);border-radius:var(--r);margin-bottom:8px;border:1px solid var(--border)">
+          <div style="width:36px;height:36px;border-radius:50%;background:${c.colors[0]};color:${c.colors[1]};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${c.name.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:600">${c.name}</div>
+            <div style="font-size:10px;color:var(--ink3)">${c.handle} · ${c.lang} · ${c.reach}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:14px;font-weight:700;color:var(--green)">${c.er}</div>
+            <div style="font-size:9px;color:var(--ink3)">ER · Fit ${c.fit}%</div>
+          </div>
+        </div>`).join('')}
+    </div>
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
+      <div style="font-size:10px;color:var(--ink3);margin-bottom:8px">Data sources: ${t.platformSource}</div>
+      <button class="btn btn-gold" style="width:100%;padding:11px" onclick="closeDrawer()">Brief a creator for this trigger →</button>
+    </div>`;
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawer-overlay').classList.add('open');
+}
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawer-overlay').classList.remove('open');
+}
+
+// ════════════════════════════════════════
+// TRENDS
+// ════════════════════════════════════════
+// ════════════════════════════════════════
+// TRENDS FILTERS — proper group toggle
+// ════════════════════════════════════════
+let tCat='all',tRegion='all',tPlatform='all';
+
+const trendsCatBtns   = () => document.querySelectorAll('#page-trends .filter-bar button[onclick*="filterTrends("]');
+const trendsRegionBtns= () => document.querySelectorAll('#page-trends .filter-bar button[onclick*="filterTrendsRegion"]');
+const trendsPlatBtns  = () => document.querySelectorAll('#page-trends .filter-bar button[onclick*="filterTrendsPlatform"]');
+
+function filterTrends(el, v) {
+  tCat = v;
+  trendsCatBtns().forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  renderTrends(tCat, tRegion, tPlatform);
+}
+function filterTrendsRegion(el, v) {
+  tRegion = v;
+  trendsRegionBtns().forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  renderTrends(tCat, tRegion, tPlatform);
+}
+function filterTrendsPlatform(el, v) {
+  tPlatform = v;
+  trendsPlatBtns().forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  renderTrends(tCat, tRegion, tPlatform);
+}
+
+const phaseColors={breaking:['var(--red-lt)','var(--red)'],growing:['var(--gold-lt)','var(--gold-dk)'],arriving:['var(--purple-lt)','var(--purple)'],mature:['var(--paper2)','var(--ink3)'],early:['var(--blue-lt)','var(--blue)']};
+const phaseLabels={breaking:'🔴 Breaking',growing:'📈 Growing',arriving:'⚡ Arriving India',mature:'✓ Mainstream',early:'🔵 Early signal'};
+const platBadge={tt:'<span class="plat plat-tt">TikTok</span>',ig:'<span class="plat plat-ig">Instagram</span>',yt:'<span class="plat plat-yt">YouTube</span>'};
+const catChipColor={skin:'var(--green)',hair:'var(--purple)',makeup:'#C2185B',hcolor:'var(--red)'};
+
+function renderTrends(cat,region,platform) {
+  let trends = GLOBAL_TRENDS;
+  if(cat!=='all') trends=trends.filter(t=>t.cat===cat);
+  if(region!=='all'&&region!=='IN') trends=trends.filter(t=>t.country===region);
+  if(region==='IN') trends=trends.filter(t=>t.phase==='arriving'||t.phase==='mature');
+  if(platform!=='all') trends=trends.filter(t=>t.platform.includes(platform));
+
+  const arriving = trends.filter(t=>t.phase==='arriving'||t.phase==='breaking');
+  const rest = trends.filter(t=>t.phase!=='arriving'&&t.phase!=='breaking');
+
+  const tCard = t => {
+    const [pbg,pc]=phaseColors[t.phase]||['var(--paper2)','var(--ink3)'];
+    return `<div class="global-trend">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div class="gt-country"><span class="gt-flag">${t.flag}</span><span class="gt-country-name">${t.country}</span></div>
+        <span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;background:${pbg};color:${pc}">${phaseLabels[t.phase]}</span>
+      </div>
+      <div class="gt-name">${t.name}</div>
+      <div class="gt-india-eta">India ETA: ${t.indiaEta}</div>
+      <div style="font-size:11px;color:var(--ink3);line-height:1.5;margin-bottom:8px">${t.description}</div>
+      <div class="gt-hook">${t.hook}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+        <div class="gt-platforms">${t.platform.map(p=>platBadge[p]).join('')}</div>
+        <div style="font-size:10px;color:var(--ink3)">Align: <strong style="color:var(--ink2)">${t.skuFit.split('·')[0].trim()}</strong></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+        <div style="background:var(--paper2);border-radius:99px;height:4px;flex:1;margin-right:8px;overflow:hidden"><div style="width:${t.velocity}%;height:100%;border-radius:99px;background:${pc}"></div></div>
+        <div style="font-size:10px;font-weight:700;color:${pc}">${t.velocity}</div>
+      </div>
+    </div>`;
+  };
+
+  const arrEl=document.getElementById('arriving-soon');
+  if(arrEl) arrEl.innerHTML=arriving.length?arriving.map(tCard).join(''):'<div style="font-size:12px;color:var(--ink3);padding:20px">No breaking trends match current filters.</div>';
+  const allEl=document.getElementById('all-trends-grid');
+  if(allEl) allEl.innerHTML=rest.map(tCard).join('');
+
+  // India beauty trends
+  const ibtEl=document.getElementById('india-beauty-trends');
+  if(ibtEl) ibtEl.innerHTML=INDIA_TRENDS.map((t,i)=>`
+    <div class="trend-item">
+      <div class="trend-rank ${t.score>=85?'hot':''}">${i+1}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600">${t.term}</div>
+        <div class="trend-sparkbar" style="margin-top:4px"><div class="spark-fill" style="width:${t.score}%;background:${catChipColor[t.cat]||'var(--ink3)'}"></div></div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:13px;font-weight:700;color:${t.score>=85?'var(--red)':'var(--ink2)'}">${t.score}</div>
+        <div style="font-size:10px;color:var(--green);font-weight:600">${t.delta}</div>
+      </div>
+    </div>`).join('');
+
+  const audEl=document.getElementById('india-audios');
+  if(audEl) audEl.innerHTML=INDIA_AUDIOS.map((a,i)=>`
+    <div class="trend-item">
+      <div class="trend-rank ${i<2?'hot':''}">${i+1}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600">${a.title}</div>
+        <div style="font-size:10px;color:var(--ink3)">${a.artist}</div>
+        <div style="font-size:10px;color:var(--ink2);margin-top:3px;background:var(--paper);padding:2px 6px;border-radius:4px;display:inline-block">Hook fit: ${a.hook}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:12px;font-weight:700;color:var(--purple)">${a.reels}</div>
+        <div style="font-size:10px;color:var(--green);font-weight:600">${a.growth}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════
+// COMPETITORS
+// ════════════════════════════════════════
+// ════════════════════════════════════════
+// COMPETITORS FILTERS
+// ════════════════════════════════════════
+let compFilters = { brand:'all', hook:'all', perf:'all' };
+
+function filterComp(el, v, type) {
+  compFilters[type] = v;
+  // Only toggle within the same group (same onclick type)
+  const selector = type === 'brand'
+    ? 'button[onclick*="\'brand\'"]'
+    : type === 'hook'
+    ? 'button[onclick*="\'hook\'"]'
+    : 'button[onclick*="\'perf\'"]';
+  document.querySelectorAll('#page-competitors .filter-bar ' + selector)
+    .forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  renderCompetitors();
+}
+
+function renderCompetitors() {
+  let ads=COMP_ADS;
+  if(compFilters.brand!=='all') ads=ads.filter(a=>a.slug===compFilters.brand);
+  if(compFilters.hook!=='all') ads=ads.filter(a=>a.hookType===compFilters.hook);
+  if(compFilters.perf!=='all') ads=ads.filter(a=>a.perf===compFilters.perf);
+  const countEl=document.getElementById('comp-count');
+  if(countEl) countEl.textContent=ads.length+' campaigns';
+  const perfColors={strong:['perf-strong','Working well'],avg:['perf-avg','Mixed signals'],weak:['perf-weak','Not working — gap to exploit']};
+  document.getElementById('comp-grid').innerHTML=ads.map(a=>{
+    const [pc,pl]=perfColors[a.perf];
+    return `<div class="ad-card">
+      <div class="ad-card-top" style="background:${a.bg}">
+        <div class="ad-brand-icon" style="background:${a.color}">${a.brand.slice(0,2).toUpperCase()}</div>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:700">${a.brand}</div>
+          <div style="font-size:10px;color:var(--ink3)">${a.format} · Started ${a.started}</div>
+        </div>
+        <span class="perf-badge ${pc}">${pl}</span>
+      </div>
+      <div class="ad-hook" style="border-left-color:${a.color}">"${a.hook}"</div>
+      <div class="ad-grid">
+        <div class="ad-grid-item"><span>Hook type</span><span>${a.hookType.replace('-',' ')}</span></div>
+        <div class="ad-grid-item"><span>Creators</span><span>${a.creators} active</span></div>
+        <div class="ad-grid-item"><span>Est. spend</span><span style="color:var(--gold-dk)">${a.spend}</span></div>
+        <div class="ad-grid-item"><span>CTA</span><span>${a.cta}</span></div>
+      </div>
+      <div style="padding:0 14px 12px;font-size:11px;color:var(--ink3);line-height:1.5"><strong style="color:var(--ink2)">${a.perf==='weak'?'⚡ Gap to exploit:':'💡 Why it\'s working:'}</strong> ${a.perfReason}</div>
+    </div>`;
+  }).join('');
+}
+
+function updateSOV(cat) {
+  const data=SOV_DATA[cat]; if(!data) return;
+  const max=Math.max(...data.map(d=>d.sov));
+  document.getElementById('sov-bars').innerHTML=data.map(d=>`
+    <div style="margin-bottom:9px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:12px;font-weight:${d.you?'700':'400'};color:${d.you?'var(--ink)':'var(--ink2)'}">${d.brand}</span>
+          ${d.you?'<span style="font-size:8px;background:var(--gold);color:var(--ink);padding:1px 5px;border-radius:3px;font-weight:700">YOU</span>':''}
+        </div>
+        <div style="display:flex;gap:8px;font-size:11px"><span style="font-weight:700;color:${d.color}">${d.sov}%</span>${d.ads?`<span style="color:var(--ink3)">${d.ads} ads</span>`:''}</div>
+      </div>
+      <div style="background:var(--paper2);border-radius:99px;height:6px;overflow:hidden">
+        <div style="width:${Math.round((d.sov/max)*100)}%;height:100%;border-radius:99px;background:${d.you?'var(--gold)':d.color};${d.you?'':'opacity:.6'}"></div>
+      </div>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════
+// PERFORMANCE
+// ════════════════════════════════════════
+function renderPerformance() {
+  const vColors={worked:['v-worked','✓ Worked'],partial:['v-partial','~ Partial'],failed:['v-failed','✗ Didn\'t work'],pending:['v-pending','… Pending']};
+  document.getElementById('activation-log').innerHTML=ACTIVATIONS.map(a=>{
+    const [vc,vl]=vColors[a.verdict];
+    return `<div class="activation-row">
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <div class="c-av" style="width:30px;height:30px;font-size:10px;background:${a.colors[0]};color:${a.colors[1]}">${a.creator.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+          <div>
+            <div style="font-size:12px;font-weight:600">${a.creator}</div>
+            <div style="font-size:10px;color:var(--ink3)">${a.region} · ${a.cat} · ${a.product}</div>
+          </div>
+          <span class="verdict-chip ${vc}" style="margin-left:auto">${vl}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0;padding:8px;background:var(--paper);border-radius:var(--r)">
+          <div><div style="font-size:9px;color:var(--ink3)">ER</div><div style="font-size:12px;font-weight:700;color:${a.er!=='—'&&parseFloat(a.er)>5?'var(--green)':'var(--ink)'}">${a.er}</div></div>
+          <div><div style="font-size:9px;color:var(--ink3)">Blinkit</div><div style="font-size:12px;font-weight:700;color:${a.blinkitDelta.includes('+')?'var(--green)':a.blinkitDelta==='Flat'?'var(--ink3)':'var(--red)'}">${a.blinkitDelta}</div></div>
+          <div><div style="font-size:9px;color:var(--ink3)">Reach</div><div style="font-size:12px;font-weight:600">${a.reach}</div></div>
+          <div><div style="font-size:9px;color:var(--ink3)">Collab</div><div style="font-size:12px;font-weight:600">${a.collab}</div></div>
+        </div>
+        <div style="font-size:11px;color:var(--ink2);line-height:1.6;padding:8px;background:${a.verdict==='failed'?'var(--red-lt)':a.verdict==='partial'?'var(--gold-lt)':'var(--paper)'};border-radius:var(--r);border-left:3px solid ${a.verdict==='worked'?'var(--green)':a.verdict==='failed'?'var(--red)':'var(--gold)'}"><strong>Drishti read:</strong> ${a.why}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('what-working').innerHTML=`
+    <div style="font-size:11px;line-height:1.8;color:var(--ink2)">
+      <div style="margin-bottom:8px;display:flex;gap:8px"><span style="color:var(--green);flex-shrink:0">↑</span><span><strong>Regional language first:</strong> Maithili/Marathi content outperforming Hindi in Bihar/MH by 1.8–2.4× ER</span></div>
+      <div style="margin-bottom:8px;display:flex;gap:8px"><span style="color:var(--green);flex-shrink:0">↑</span><span><strong>Problem-first hooks:</strong> "Why your hair fall is a scalp problem" beating "My hair care routine" by 3× saves</span></div>
+      <div style="margin-bottom:8px;display:flex;gap:8px"><span style="color:var(--green);flex-shrink:0">↑</span><span><strong>Timing + trend alignment:</strong> Activating within 48h of a search spike = 2× better Blinkit rank movement</span></div>
+      <div style="display:flex;gap:8px"><span style="color:var(--green);flex-shrink:0">↑</span><span><strong>Micro in Bihar:</strong> 10K–200K creators outperforming VIP in Bihar on ER by avg 3.1% pts</span></div>
+    </div>`;
+
+  document.getElementById('what-not').innerHTML=`
+    <div style="font-size:11px;line-height:1.8;color:var(--ink2)">
+      <div style="margin-bottom:8px;display:flex;gap:8px"><span style="color:var(--red);flex-shrink:0">↓</span><span><strong>Generic hooks in competitive moments:</strong> Meenal Shah's "hair care routine" was outpaced by Pilgrim's sharper scalp-specific hook the same week. Generic = invisible when category is active.</span></div>
+      <div style="margin-bottom:8px;display:flex;gap:8px"><span style="color:var(--red);flex-shrink:0">↓</span><span><strong>Education without purchase bridge:</strong> Kratika's serum content had strong ER but zero Blinkit movement — content educated but didn't convert. Missing a "where to buy" / urgency CTA.</span></div>
+      <div style="display:flex;gap:8px"><span style="color:var(--red);flex-shrink:0">↓</span><span><strong>15-second format for complex products:</strong> Lakmé's 15s foundation reel had incomplete demo — too short for a product that requires skin tone matching. 30s minimum for foundation.</span></div>
+    </div>`;
+}
+</script>
+</body>
+</html>
